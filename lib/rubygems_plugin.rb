@@ -1,4 +1,5 @@
 require 'rubygems/command_manager'
-require 'rubygems/mirror/command'
+require 'rubygems/aliyun/command'
+require 'aliyun/oss'
 
-Gem::CommandManager.instance.register_command :mirror
+Gem::CommandManager.instance.register_command :aliyun

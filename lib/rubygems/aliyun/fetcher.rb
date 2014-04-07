@@ -1,12 +1,15 @@
 require 'net/http/persistent'
 require 'time'
 
-class Gem::Mirror::Fetcher
+class Gem::Aliyun::Fetcher
   # TODO  beef
   class Error < StandardError; end
 
-  def initialize
+  attr_reader :bucket
+
+  def initialize bucket
     @http = Net::HTTP::Persistent.new(self.class.name, :ENV)
+    @bucket = bucket
   end
 
   # Fetch a source path under the base uri, and put it in the same or given
@@ -42,15 +45,6 @@ class Gem::Mirror::Fetcher
   # Efficiently writes an http response object to a particular path. If there
   # is an error, it will remove the target file.
   def write_file(resp, path)
-    FileUtils.mkdir_p File.dirname(path)
-    File.open(path, 'wb') do |output|
-      resp.read_body { |chunk| output << chunk }
-    end
-    true
-  ensure
-    # cleanup incomplete files, rescue perm errors etc, they're being
-    # raised already.
-    File.delete(path) rescue nil if $!
+    Aliyun::OSS::OSSObject.store(path, resp.read_body, bucket)
   end
-
 end

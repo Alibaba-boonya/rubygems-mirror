@@ -1,6 +1,6 @@
 require 'thread'
 
-class Gem::Mirror::Pool
+class Gem::Aliyun::Pool
   def initialize(size)
     @size = size
     @queue = Queue.new

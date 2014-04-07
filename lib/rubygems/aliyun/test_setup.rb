@@ -8,13 +8,13 @@ require "rubygems/indexer"
 
 # All files must be proactively loaded, otherwhise when the Gem index is
 # replaced, requires will fail!
-require "rubygems/mirror"
-require "rubygems/mirror/fetcher"
-require "rubygems/mirror/pool"
+require "rubygems/aliyun"
+require "rubygems/aliyun/fetcher"
+require "rubygems/aliyun/pool"
 
-class Gem::Mirror
+class Gem::Aliyun
 
-  # Provide assistance for authors of code that utilises Gem::Mirror. The
+  # Provide assistance for authors of code that utilises Gem::Aliyun. The
   # module defines several setup and teardown methods that can be used to
   # provide a new gem source on disk.
   module TestSetup

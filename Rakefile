@@ -1,32 +1,30 @@
 #!/usr/bin/env rake
 
 require 'hoe'
-Hoe.plugin :doofus, :git, :gemcutter
+Hoe.plugin :doofus, :git
 
-Hoe.spec 'rubygems-mirror' do
+Hoe.spec 'rubygems-mirror-aliyun' do
   developer('James Tucker', 'raggi@rubyforge.org')
 
-  extra_dev_deps << %w[hoe-doofus >=1.0.0]
-  extra_dev_deps << %w[hoe-git >=1.3.0]
-  extra_dev_deps << %w[hoe-gemcutter >=1.0.0]
-  extra_dev_deps << %w[builder >=2.1.2]
-  extra_deps     << %w[net-http-persistent >=2.1]
+  extra_dev_deps << %w[hoe-doofus ~>1.0]
+  extra_dev_deps << %w[hoe-git ~>1.6]
+  extra_deps     << %w[net-http-persistent ~>2.9]
+  extra_deps     << %w[aliyun-oss]
 
   self.extra_rdoc_files = FileList["**/*.rdoc"]
   self.history_file     = "CHANGELOG.rdoc"
   self.readme_file      = "README.rdoc"
-  self.rubyforge_name   = 'rubygems'
   self.testlib          = :minitest
 end
 
-namespace :mirror do
-  desc "Run the Gem::Mirror::Command"
+namespace :aliyun do
+  desc "Run the Gem::Aliyun::Command"
   task :update do
     $:.unshift 'lib'
-    require 'rubygems/mirror/command'
+    require 'rubygems/aliyun/command'
 
-    mirror = Gem::Commands::MirrorCommand.new
-    mirror.execute
+    aliyun_mirror = Gem::Commands::AliyunCommand.new
+    aliyun_mirror.execute
   end
 end
 
