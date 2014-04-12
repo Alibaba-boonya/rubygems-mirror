@@ -99,6 +99,7 @@ class Gem::Aliyun
   end
 
   def oss_get key
+    puts "get from aliyun oss #{@bucket_name} #{key}"
     Aliyun::OSS::OSSObject.find(key, @bucket_name)
   end
 
@@ -107,6 +108,7 @@ class Gem::Aliyun
   end
 
   def oss_write key, content
+    puts "store to aliyun oss #{@bucket_name} #{key}"
     Aliyun::OSS::OSSObject.store key, content, @bucket_name
   end
 end

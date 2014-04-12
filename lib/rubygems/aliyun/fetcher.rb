@@ -1,5 +1,6 @@
 require 'net/http/persistent'
 require 'time'
+require 'pry'
 
 class Gem::Aliyun::Fetcher
   # TODO  beef
@@ -15,12 +16,14 @@ class Gem::Aliyun::Fetcher
   # Fetch a source path under the base uri, and put it in the same or given
   # destination path under the base path.
   def fetch(uri, path)
-    modified_time = File.exists?(path) && File.stat(path).mtime.rfc822
+    modified_time = oss_get(path) && oss_get(path).last_modified.rfc822
+    modified_time = "Mon, 07 Apr 2014 07:01:31 GMT"
 
     req = Net::HTTP::Get.new URI.parse(uri).path
     req.add_field 'If-Modified-Since', modified_time if modified_time
 
     @http.request URI(uri), req do |resp|
+      binding.pry
       return handle_response(resp, path)
     end
   end
@@ -44,7 +47,11 @@ class Gem::Aliyun::Fetcher
 
   # Efficiently writes an http response object to a particular path. If there
   # is an error, it will remove the target file.
-  def write_file(resp, path)
-    Aliyun::OSS::OSSObject.store(path, resp.read_body, bucket)
+  def write_file(resp, key)
+    Aliyun::OSS::OSSObject.store(key, resp.read_body, bucket)
+  end
+
+  def oss_get(key)
+    Aliyun::OSS::OSSObject.find(key, bucket)
   end
 end
