@@ -1,6 +1,6 @@
 # rubygems-mirror
 
-This gem can help you to full mirror of [rubygems.org](http://rubygems.org), 
+This gem can help you to full mirror of [rubygems.org](http://rubygems.org),
 it is an update to the old `gem mirror` command. It uses `net/http/persistent`
 and threads to grab the mirror set a little faster than the original.
 Eventually it will replace `gem mirror` completely. Right now the API is not
@@ -22,12 +22,16 @@ will maintain stability in master.
 In a file at `~/.gem/.mirrorrc` add a config that looks like the following:
 
     ---
-    - from: http://rubygems.org
-      to: /data/rubygems
+    - from:
+        provider: http
+        url: http://rubygems.org
+      to:
+        provider: local
+        path: /data/rubygems
       parallelism: 10
 
 Either install the gem:
-    
+
     $ gem install rubygems-mirror
     $ gem mirror
 
