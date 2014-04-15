@@ -22,7 +22,7 @@ module Gem
           req.add_field 'If-None-Match', etag if etag
 
           @http.request URI(from(path)), req do |resp|
-            return handle_response(resp, etag)
+            return handle_response(resp, path, etag)
           end
         end
 
@@ -34,16 +34,17 @@ module Gem
 
         # Handle an http response, follow redirects, etc. returns true if a file was
         # downloaded, false if a 304. Raise Error on unknown responses.
-        def handle_response(resp, etag)
+        def handle_response(resp, path, etag)
           case resp.code.to_i
           when 304
             return [nil, get_etag(resp)]
           when 302
-            fetch resp['location'], etag
+            fetch resp['location'], path, etag
           when 200
             [StringIO.new(resp.body), get_etag(resp)]
           when 403, 404
             warn "#{resp.code} on #{File.basename(path)}"
+            [nil, nil]
           else
             raise Error, "unexpected response #{resp.inspect}"
           end
