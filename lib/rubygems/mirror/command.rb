@@ -38,14 +38,11 @@ Multiple sources and destinations may be specified.
       raise "mirror missing 'to' field" unless mir.has_key? 'to'
 
       get_from = mir['from']
-      save_to = File.expand_path mir['to']
+      save_to =  mir['to']
       parallelism = mir['parallelism']
 
-      raise "Directory not found: #{save_to}" unless File.exist? save_to
-      raise "Not a directory: #{save_to}" unless File.directory? save_to
-
       mirror = Gem::Mirror.new(get_from, save_to, parallelism)
-      
+
       say "Fetching: #{mirror.from(Gem::Mirror::SPECS_FILE_Z)} with #{parallelism} threads"
       mirror.update_specs
 
@@ -54,7 +51,7 @@ Multiple sources and destinations may be specified.
       num_to_fetch = mirror.gems_to_fetch.size
 
       progress = ui.progress_reporter num_to_fetch,
-                                  "Fetching #{num_to_fetch} gems"
+        "Fetching #{num_to_fetch} gems"
 
       trap(:INFO) { puts "Fetched: #{progress.count}/#{num_to_fetch}" } if SUPPORTS_INFO_SIGNAL
 
@@ -63,7 +60,7 @@ Multiple sources and destinations may be specified.
       num_to_delete = mirror.gems_to_delete.size
 
       progress = ui.progress_reporter num_to_delete,
-                                 "Deleting #{num_to_delete} gems"
+        "Deleting #{num_to_delete} gems"
 
       trap(:INFO) { puts "Fetched: #{progress.count}/#{num_to_delete}" } if SUPPORTS_INFO_SIGNAL
 

@@ -1,77 +1,69 @@
 require 'rubygems'
 require 'fileutils'
+require 'pry'
 
 class Gem::Mirror
   autoload :Fetcher, 'rubygems/mirror/fetcher'
   autoload :Pool, 'rubygems/mirror/pool'
 
   VERSION = '1.0.1'
-  
-  SPECS_FILES = [ "specs.#{Gem.marshal_version}", "prerelease_specs.#{Gem.marshal_version}" ]
-  SPECS_FILE_Z = "specs.#{Gem.marshal_version}.gz"
-  ALL_SPECS_FILES = ["yaml","yaml.Z","latest_specs.#{Gem.marshal_version}","latest_specs.#{Gem.marshal_version}.gz",
-                "Marshal.#{Gem.marshal_version}", "Marshal.#{Gem.marshal_version}.Z",
-                "prerelease_specs.#{Gem.marshal_version}","prerelease_specs.#{Gem.marshal_version}.gz",
-                "specs.#{Gem.marshal_version}","specs.#{Gem.marshal_version}.gz"]
+
+  MV = MARSHAL_VERSION = Gem.marshal_version
+  SPECS_FILES = [ "specs.#{MV}", "prerelease_specs.#{MV}" ]
+  SPECS_FILE_Z = "specs.#{MV}.gz"
+  ALL_SPECS_FILES = ["yaml","yaml.Z","latest_specs.#{MV}","latest_specs.#{MV}.gz",
+                "Marshal.#{MV}", "Marshal.#{MV}.Z",
+                "prerelease_specs.#{MV}","prerelease_specs.#{MV}.gz",
+                "specs.#{MV}","specs.#{MV}.gz"]
 
   DEFAULT_URI = 'http://production.cf.rubygems.org/'
   DEFAULT_TO = File.join(Gem.user_home, '.gem', 'mirror')
 
   RUBY = 'ruby'
 
-  def initialize(from = DEFAULT_URI, to = DEFAULT_TO, parallelism = nil)
+  def initialize(from, to, parallelism = nil)
+    require 'rubygems/mirror/backend'
+    @from_backend = Gem::Mirror::Backend.new(from)
+    @to_backend   = Gem::Mirror::Backend.new(to)
+
+
     @from, @to = from, to
-    @fetcher = Fetcher.new
+    @fetcher = Fetcher.new(@from_backend, @to_backend)
     @pool = Pool.new(parallelism || 10)
   end
 
-  def from(*args)
-    File.join(@from, *args)
-  end
-
-  def to(*args)
-    File.join(@to, *args)
+  def from *args
+    @from_backend.from args
   end
 
   def update_specs
     SPECS_FILES.each do |sf|
       sfz = "#{sf}.gz"
-      specz = to(sfz)
-      @fetcher.fetch(from(sfz), specz)
-      open(to(sf), 'wb') { |f| f << Gem.gunzip(Gem.read_binary(specz)) }
+      @fetcher.fetch(sfz)
+      StringIO.open(Gem.gunzip(@to_backend.fetch(sfz)[0].read)) do |io|
+        @to_backend.write(io, sf)
+      end
     end
   end
-  
+
   def fetch_all_specs
     ALL_SPECS_FILES.each do |spec_file|
       print "Fetching #{spec_file}..."
-      @fetcher.fetch(from(spec_file), to(spec_file))
+      @fetcher.fetch(spec_file)
       puts "[Done]"
     end
   end
 
   def gems
-    gems = []
-    SPECS_FILES.each do |sf|
-      update_specs unless File.exists?(to(sf))
-
-      gems += Marshal.load(Gem.read_binary(to(sf)))
-    end
-
-    gems.map! do |name, ver, plat|
-      # If the platform is ruby, it is not in the gem name
-      "#{name}-#{ver}#{"-#{plat}" unless plat == RUBY}.gem"
-    end
-    gems
+    @gems ||= get_gems
   end
 
   def existing_gems
-    Dir[to('gems', '*.gem')].entries.map { |f| File.basename(f) }
+    @existing_gems ||= @to_backend.existing_gems
   end
 
   def existing_gemspecs
-    Dir[to("quick/Marshal.#{Gem.marshal_version}", '*.rz')].entries.map { |f| File.basename(f) }
-
+    @existing_gemspecs ||= @to_backend.existing_gemspecs
   end
 
   def gems_to_fetch
@@ -93,14 +85,14 @@ class Gem::Mirror
     print "#{gems_to_fetch.count} Gems need to update"
     gems_to_fetch.each do |g|
       @pool.job do
-        @fetcher.fetch(from('gems', g), to('gems', g))
+        @fetcher.fetch(File.join('gems', g))
         print "."
         yield if block_given?
       end
     end
     gemspecs_to_fetch.each do |g_spec|
       @pool.job do
-        @fetcher.fetch(from("quick/Marshal.#{Gem.marshal_version}", g_spec), to("quick/Marshal.#{Gem.marshal_version}", g_spec))
+        @fetcher.fetch(File.join("quick/Marshal.#{Gem.marshal_version}", g_spec))
         print "."
         yield if block_given?
       end
@@ -115,7 +107,7 @@ class Gem::Mirror
     #     yield if block_given?
     #   end
     # end
-    # 
+    #
     # @pool.run_til_done
   end
 
@@ -123,5 +115,23 @@ class Gem::Mirror
     update_specs
     update_gems
     cleanup_gems
+  end
+
+
+  private
+
+  def get_gems
+    gems = []
+    SPECS_FILES.each do |sf|
+      update_specs unless @to_backend.exists?(sf)
+
+      gems += Marshal.load(@to_backend.fetch(sf)[0].read)
+    end
+
+    gems.map! do |name, ver, plat|
+      # If the platform is ruby, it is not in the gem name
+      "#{name}-#{ver}#{"-#{plat}" unless plat == RUBY}.gem"
+    end
+    gems
   end
 end
