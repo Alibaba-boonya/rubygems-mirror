@@ -28,11 +28,11 @@ module Gem
 
         def _fetch uri, path, etag
 
-          req = Net::HTTP::Get.new "/#{path}"
+          req = Net::HTTP::Get.new URI(uri).path
           req.add_field 'If-None-Match', etag if etag
 
           @http.request URI(uri), req do |resp|
-            return handle_response(resp, path, etag)
+            return handle_response(resp, uri, etag)
           end
 
         end
@@ -51,7 +51,7 @@ module Gem
             warn "#{resp.code} on #{File.basename(path)}"
             [nil, nil]
           else
-            raise Error, "unexpected response #{resp.inspect}"
+            raise "unexpected response #{resp.inspect}"
           end
           # TODO rescue http errors and reraise cleanly
         end
