@@ -29,33 +29,30 @@ module Gem
 
         # Fetch a source path under the base uri, and put it in the same or given
         # destination path under the base path.
-        def fetch path, etag=nil
+        def fetch path, modified_time=nil
           expand_path = gen_path(path)
 
-          [ File.open(expand_path), etag(path) ]
+          File.open(expand_path) do |file|
+            yield [file, get_modified_time(expand_path)]
+          end
         end
 
-        def etag path
+        def get_modified_time path
           expand_path = gen_path(path)
 
           File.exist?(expand_path) ?
-            Digest::MD5.hexdigest(File.read(gen_path(path))) :
+            File.stat(expand_path).mtime.rfc822 :
             nil
         end
 
-        def write(io, path, etag=nil)
+        def write(from, path)
           expand_path = gen_path(path)
 
           FileUtils.mkdir_p File.dirname(expand_path)
-          from = io
-          to = File.open(expand_path, 'wb')
 
-          IO.copy_stream(from, to)
-
-          from.close
-          to.close
-
-          checksum path, etag if etag
+          File.open(expand_path, 'wb') do |to|
+            IO.copy_stream(from, to)
+          end
 
           true
         end
@@ -69,13 +66,6 @@ module Gem
 
         def gen_path *path
           File.join(base_path, *path)
-        end
-
-        def checksum path, etag
-          # ETAG not match, delete the file
-          if Digest::MD5.hexdigest(File.read(gen_path(path))) != etag.downcase
-            File.delete(path)
-          end
         end
       end
     end

@@ -16,8 +16,9 @@ module Gem
 
         # Fetch a source path under the base uri, and put it in the same or given
         # destination path under the base path.
-        def fetch path, etag=nil
-          _fetch from(path), path, etag
+        def fetch path, modified_time=nil, &block
+          raise ArgumentError.new "no block given" unless block_given?
+          _fetch from(path), path, modified_time, &block
         end
 
         def from *args
@@ -26,27 +27,27 @@ module Gem
 
         private
 
-        def _fetch uri, path, etag
+        def _fetch uri, path, modified_time, &block
 
           req = Net::HTTP::Get.new URI(uri).path
-          req.add_field 'If-None-Match', etag if etag
+          req.add_field 'If-None-Since', modified_time if modified_time
 
           @http.request URI(uri), req do |resp|
-            return handle_response(resp, uri, etag)
+            return handle_response(resp, uri, modified_time, &block)
           end
 
         end
 
         # Handle an http response, follow redirects, etc. returns true if a file was
         # downloaded, false if a 304. Raise Error on unknown responses.
-        def handle_response(resp, path, etag)
+        def handle_response(resp, path, modified_time, &block)
           case resp.code.to_i
           when 304
-            return [nil, get_etag(resp)]
+            return [nil, get_modified_time(resp)]
           when 302
-            _fetch resp['location'], path, etag
+            _fetch resp['location'], path, modified_time, &block
           when 200
-            [StringIO.new(resp.body), get_etag(resp)]
+            yield [StringIO.new(resp.read_body), get_modified_time(resp)]
           when 403, 404
             warn "#{resp.code} on #{File.basename(path)}"
             [nil, nil]
@@ -56,8 +57,8 @@ module Gem
           # TODO rescue http errors and reraise cleanly
         end
 
-        def get_etag resp
-          resp["ETAG"].gsub(/"/, '') if resp["ETAG"]
+        def get_modified_time resp
+          resp["Last-Modified"].gsub(/"/, '') if resp["Last-Modified"]
         end
 
         def readonly?

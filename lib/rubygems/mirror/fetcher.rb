@@ -10,8 +10,9 @@ class Gem::Mirror::Fetcher
 
   end
 
-  def fetch(path)
-    io, etag = @from.fetch(path, @to.etag(path))
-    @to.write(io, path, etag) if io
+  def fetch(path, &block)
+    @from.fetch(path, @to.get_modified_time(path)) do |io, modified_time|
+      @to.write(io, path)
+    end
   end
 end

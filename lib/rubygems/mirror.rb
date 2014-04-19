@@ -39,8 +39,10 @@ class Gem::Mirror
     SPECS_FILES.each do |sf|
       sfz = "#{sf}.gz"
       @fetcher.fetch(sfz)
-      StringIO.open(Gem.gunzip(@to_backend.fetch(sfz)[0].read)) do |io|
-        @to_backend.write(io, sf)
+      @to_backend.fetch(sfz) do |io, modified_time|
+        StringIO.open(Gem.gunzip(io.read)) do |ioo|
+          @to_backend.write(ioo, sf)
+        end
       end
     end
   end
@@ -124,7 +126,9 @@ class Gem::Mirror
     SPECS_FILES.each do |sf|
       update_specs unless @to_backend.exists?(sf)
 
-      gems += Marshal.load(@to_backend.fetch(sf)[0].read)
+      @to_backend.fetch(sf) do |io, modified_time|
+        gems += Marshal.load(io.read)
+      end
     end
 
     gems.map! do |name, ver, plat|
