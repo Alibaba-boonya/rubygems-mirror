@@ -4,16 +4,24 @@ module Gem
       class Base
         # Readonly backend cannot be used in Fetcher#to_backend
         def readonly?
-          raise NotImplementedError.new %/override this method "#{__method__}" please/
+          raise NotImplementedError
         end
 
         # Return or yield a IO instance
         def fetch
-          raise NotImplementedError.new %/override this method "#{__method__}" please/
+          raise NotImplementedError
         end
 
         def exists?
-          raise NotImplementedError.new %/override this method "#{__method__}" please/
+          raise NotImplementedError
+        end
+
+        def existing_gemspecs
+          raise NotImplementedError
+        end
+
+        def existing_gems
+          raise NotImplementedError
         end
       end
     end
