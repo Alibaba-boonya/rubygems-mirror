@@ -27,7 +27,7 @@ module Gem
 
         def fetch path, etag=nil, &block
           raise ArgumentError.new "no block given" unless block_given?
-          warn "feching #{path} from #{oss} bucket #{@bucket_name}"
+          warn "feching #{path} from oss bucket #{@bucket_name}"
           oss_obj = oss_find(path)
           yield [StringIO.new(oss_obj.value), get_etag(oss_obj)]
         end
@@ -49,7 +49,7 @@ module Gem
         end
 
         def write(from, path)
-          warn "store #{path} to #{oss} bucket #{@bucket_name}"
+          warn "store #{path} to oss bucket #{@bucket_name}"
           ::Aliyun::OSS::OSSObject.store gen_path(path), from.read, @bucket_name
         end
 
