@@ -80,6 +80,7 @@ module Gem
           marker = options[:marker]
           files = []
 
+          warn %/travel_all_files in oss bucket "#{@bucket_name}" with prefix "#{prefix}"/
           loop do
             _tmps = bucket.objects(max_keys: @max_keys, marker: marker, prefix: prefix)
 
