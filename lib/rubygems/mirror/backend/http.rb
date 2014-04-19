@@ -43,6 +43,8 @@ module Gem
         def handle_response(resp, path, etag, &block)
           case resp.code.to_i
           when 304
+            et = get_etag(resp)
+            warn "304 Not modified with etag #{et}"
             return [nil, get_etag(resp)]
           when 302
             _fetch resp['location'], path, etag, &block
