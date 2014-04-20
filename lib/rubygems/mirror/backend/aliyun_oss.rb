@@ -1,4 +1,6 @@
 require 'aliyun/oss'
+require 'redis'
+require 'redis-namespace'
 
 module Gem
   class Mirror
@@ -79,7 +81,7 @@ module Gem
 
         # OSS 的 Bucket Object List 速度太慢, 所以引入 Redis 做一级缓存
         def redis
-          @redis ||= Redis::Namespace.new("rubygems-china", redis: Redis.new)
+          @redis ||= ::Redis::Namespace.new("rubygems-china", redis: ::Redis.new)
         end
 
         def bucket
