@@ -63,6 +63,12 @@ module Gem
 
         def write(from, path)
           warn "store #{path} to oss bucket #{@bucket_name}"
+          case path
+          when /^gems/
+            redis.sadd(@existing_gems_key, File.basename(path))
+          when /^quick/
+            redis.sadd(@existing_gemspecs_key, File.basename(path))
+          end
           ::Aliyun::OSS::OSSObject.store gen_path(path), from.read, @bucket_name
         end
 
