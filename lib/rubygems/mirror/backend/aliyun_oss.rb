@@ -21,7 +21,7 @@ module Gem
           @namespace         = attributes.delete("namespace")
 
           @existing_gems_key     = "gems"
-          @existing_gemspecs_key = "quick"
+          @existing_gemspecs_key = "quick/Marshal.#{Gem.marshal_version}"
 
           connection_prepare
         end
