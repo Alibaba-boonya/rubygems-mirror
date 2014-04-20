@@ -18,6 +18,9 @@ module Gem
           @max_keys          = attributes.delete("max_keys") || 1000
           @namespace         = attributes.delete("namespace")
 
+          @existing_gems_key     = "existing_gems"
+          @existing_gemspecs_key = "existing_gemspecs"
+
           connection_prepare
         end
 
@@ -33,14 +36,22 @@ module Gem
         end
 
         def existing_gems
-          travel_all_files(prefix: "gems") do |oss_obj|
-            File.basename(oss_obj.key)
-          end
+          redis.smembers(@existing_gems_key)
         end
 
         def existing_gemspecs
+          redis.smembers(@existing_gemspecs_key)
+        end
+
+        def update_existing_gems
+          travel_all_files(prefix: "gems") do |oss_obj|
+            redis.sadd(@existing_gems_key, File.basename(oss_obj.key))
+          end
+        end
+
+        def update_existing_gemspecs
           travel_all_files(prefix: "quick") do |oss_obj|
-            File.basename(oss_obj.key)
+            redis.sadd(@existing_gemspecs_key, File.basename(oss_obj.key))
           end
         end
 
@@ -65,6 +76,11 @@ module Gem
         end
 
         private
+
+        # OSS 的 Bucket Object List 速度太慢, 所以引入 Redis 做一级缓存
+        def redis
+          @redis ||= Redis::Namespace.new("rubygems-china", redis: Redis.new)
+        end
 
         def bucket
           @bucket ||= ::Aliyun::OSS::Bucket.find(@bucket_name)
