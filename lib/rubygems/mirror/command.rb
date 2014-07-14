@@ -44,7 +44,7 @@ Multiple sources and destinations may be specified.
       mirror = Gem::Mirror.new(get_from, save_to, parallelism)
 
       say "Fetching: #{mirror.from(Gem::Mirror::SPECS_FILE_Z)} with #{parallelism} threads"
-      mirror.update_specs
+      mirror.update_specs_in_local
 
       say "Total gems: #{mirror.gems.size}"
 
@@ -65,6 +65,8 @@ Multiple sources and destinations may be specified.
       trap(:INFO) { puts "Fetched: #{progress.count}/#{num_to_delete}" } if SUPPORTS_INFO_SIGNAL
 
       mirror.delete_gems { progress.updated true }
+      
+      mirror.update_specs
     end
   end
 end

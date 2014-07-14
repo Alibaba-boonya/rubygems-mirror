@@ -63,18 +63,16 @@ module Gem
 
         def write(from, path)
           warn "store #{path} to oss bucket #{@bucket_name}"
-          redis_add path
           ::Aliyun::OSS::OSSObject.store gen_path(path), from.read, @bucket_name
+          redis_add path
         end
 
         def get_etag arg
           case arg
           when String
             exists?(arg) ?  oss_find(arg).etag.downcase : nil
-
           when ::Aliyun::OSS::OSSObject
             arg.etag.downcase
-
           end
         end
 

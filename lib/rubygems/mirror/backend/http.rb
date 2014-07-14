@@ -44,17 +44,17 @@ module Gem
           case resp.code.to_i
           when 304
             et = get_etag(resp)
-            warn "304 Not modified with etag #{et}"
+            puts "  304 Not modified with etag #{et}"
             return [nil, get_etag(resp)]
           when 302
             _fetch resp['location'], path, etag, &block
           when 200
             yield [StringIO.new(resp.read_body), get_etag(resp)]
           when 403, 404
-            warn "#{resp.code} on #{File.basename(path)}"
+            puts "  #{resp.code} on #{File.basename(path)}"
             [nil, nil]
           else
-            raise "unexpected response #{resp.inspect}"
+            raise "  unexpected response #{resp.inspect}"
           end
           # TODO rescue http errors and reraise cleanly
         end

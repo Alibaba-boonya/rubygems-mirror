@@ -5,7 +5,7 @@ class Gem::Mirror
   autoload :Fetcher, 'rubygems/mirror/fetcher'
   autoload :Pool, 'rubygems/mirror/pool'
 
-  VERSION = '1.0.1'
+  VERSION = '1.1.0'
 
   MV = MARSHAL_VERSION = Gem.marshal_version
   SPECS_FILES = [ "specs.#{MV}", "prerelease_specs.#{MV}" ]
@@ -16,18 +16,25 @@ class Gem::Mirror
                 "specs.#{MV}","specs.#{MV}.gz"]
 
   DEFAULT_URI = 'http://production.cf.rubygems.org/'
-  DEFAULT_TO = File.join(Gem.user_home, '.gem', 'mirror')
-
+  TEMP_LOCAL_PATH = "/tmp/.rubygems-mirror"
   RUBY = 'ruby'
 
   def initialize(from, to, parallelism = nil)
     require 'rubygems/mirror/backend'
+    
+    if !Dir.exist?(TEMP_LOCAL_PATH)
+      Dir.mkdir(TEMP_LOCAL_PATH)
+    end
+    
+    @temp_local_backend = Gem::Mirror::Backend.new({ 'provider' => 'local', 'path' => TEMP_LOCAL_PATH })
     @from_backend = Gem::Mirror::Backend.new(from)
     @to_backend   = Gem::Mirror::Backend.new(to)
-
-
+    
     @from, @to = from, to
-    @fetcher = Fetcher.new(@from_backend, @to_backend)
+    
+    @temp_fetcher = Fetcher.new(@from_backend, @temp_local_backend)
+    @fetcher = Fetcher.new(@temp_local_backend, @to_backend)
+    @gem_fetcher = Fetcher.new(@from_backend, @to_backend)
     @pool = Pool.new(parallelism || 10)
   end
 
@@ -35,23 +42,15 @@ class Gem::Mirror
     @from_backend.from args
   end
 
-  def update_specs
-    SPECS_FILES.each do |sf|
-      sfz = "#{sf}.gz"
-      @fetcher.fetch(sfz)
-      @to_backend.fetch(sfz) do |io, etag|
-        StringIO.open(Gem.gunzip(io.read)) do |ioo|
-          @to_backend.write(ioo, sf)
-        end
-      end
+  def update_specs_in_local
+    ALL_SPECS_FILES.each do |sf|
+      @temp_fetcher.fetch(sf)
     end
   end
-
-  def fetch_all_specs
-    ALL_SPECS_FILES.each do |spec_file|
-      print "Fetching #{spec_file}..."
-      @fetcher.fetch(spec_file)
-      puts "[Done]"
+  
+  def update_specs
+    ALL_SPECS_FILES.each do |sf|
+      @fetcher.fetch(sf)
     end
   end
 
@@ -80,21 +79,22 @@ class Gem::Mirror
   end
 
   def update_gems
-    fetch_all_specs
     puts ""
-    puts "-"*100
-    print "#{gems_to_fetch.count} Gems need to update"
+    puts "-" * 100
+    puts "#{gems_to_fetch.count} Gems need to update"
+    puts ""
+    
     gems_to_fetch.each do |g|
       @pool.job do
-        @fetcher.fetch(File.join('gems', g))
-        print "."
+        puts "Update #{g}"
+        @gem_fetcher.fetch(File.join('gems', g))
         yield if block_given?
       end
     end
+    
     gemspecs_to_fetch.each do |g_spec|
       @pool.job do
-        @fetcher.fetch(File.join("quick/Marshal.#{Gem.marshal_version}", g_spec))
-        print "."
+        @gem_fetcher.fetch(File.join("quick/Marshal.#{Gem.marshal_version}", g_spec))
         yield if block_given?
       end
     end
@@ -102,14 +102,6 @@ class Gem::Mirror
   end
 
   def delete_gems
-    # gems_to_delete.each do |g|
-    #   @pool.job do
-    #     File.delete(to('gems', g))
-    #     yield if block_given?
-    #   end
-    # end
-    #
-    # @pool.run_til_done
   end
 
   def update
@@ -124,9 +116,9 @@ class Gem::Mirror
   def get_gems
     gems = []
     SPECS_FILES.each do |sf|
-      update_specs unless @to_backend.exists?(sf)
+      update_specs unless @temp_local_backend.exists?(sf)
 
-      @to_backend.fetch(sf) do |io, etag|
+      @temp_local_backend.fetch(sf) do |io, etag|
         gems += Marshal.load(io.read)
       end
     end

@@ -1,4 +1,4 @@
-# rubygems-mirror
+# RubyGems Mirror Tool
 
 This gem can help you to full mirror of [rubygems.org](http://rubygems.org),
 it is an update to the old `gem mirror` command. It uses `net/http/persistent`
@@ -7,10 +7,26 @@ Eventually it will replace `gem mirror` completely. Right now the API is not
 completely stable (it will change several times before release), however, I
 will maintain stability in master.
 
-## FEATURES/PROBLEMS:
+## 原理
 
-* Fast mirroring
-* Limited tests - just functional
+```
+                -------------------------------
+                |       Offical Mirror        |
+                -------------------------------
+                              |
+                         [HTTP GET]
+                              |
+            [Fetch specs.4.8.gz] -> [Store in Local]
+                              |
+            [Parse specs.4.8.gz to discover new gems]
+                              |
+                |--[loop fetch new gems] -----------------
+                |             |                          |
+                --------------|                          |
+                                                         ---- [Store in Aliyun OSS]
+                            [Done]
+
+```
 
 ## REQUIREMENTS:
 
