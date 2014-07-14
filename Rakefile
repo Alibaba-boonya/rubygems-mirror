@@ -13,7 +13,7 @@ Hoe.spec 'rubygems-mirror' do
   extra_deps     << %w[net-http-persistent >=2.1]
 
   self.extra_rdoc_files = FileList["**/*.rdoc"]
-  self.history_file     = "CHANGELOG.rdoc"
+  self.history_file     = "CHANGELOG.md"
   self.readme_file      = "README.md"
   self.rubyforge_name   = 'rubygems'
   self.testlib          = :minitest

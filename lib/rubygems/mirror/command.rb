@@ -43,7 +43,7 @@ Multiple sources and destinations may be specified.
 
       mirror = Gem::Mirror.new(get_from, save_to, parallelism)
 
-      say "Fetching: #{mirror.from(Gem::Mirror::SPECS_FILE_Z)} with #{parallelism} threads"
+      say "Fetching: #{mirror.from(Gem::Mirror::SPECS_FILES[0])} with #{parallelism} threads"
       mirror.update_specs_in_local
 
       say "Total gems: #{mirror.gems.size}"

@@ -9,11 +9,11 @@ class Gem::Mirror
 
   MV = MARSHAL_VERSION = Gem.marshal_version
   SPECS_FILES = [ "specs.#{MV}", "prerelease_specs.#{MV}" ]
-  SPECS_FILE_Z = "specs.#{MV}.gz"
-  ALL_SPECS_FILES = ["yaml","yaml.Z","latest_specs.#{MV}","latest_specs.#{MV}.gz",
-                "Marshal.#{MV}", "Marshal.#{MV}.Z",
-                "prerelease_specs.#{MV}","prerelease_specs.#{MV}.gz",
-                "specs.#{MV}","specs.#{MV}.gz"]
+  
+  OTHER_SPECS_FILES = %W(yaml.Z yaml Marshal.#{MV}.Z Marshal.#{MV})
+  ALL_SPEC_GZ_FILES = %W(latest_specs.#{MV}.gz prerelease_specs.#{MV}.gz specs.#{MV}.gz)
+  ALL_SPEC_FILES = %W(yaml.Z latest_specs.#{MV}.gz Marshal.#{MV}.Z prerelease_specs.#{MV}.gz specs.#{MV}.gz 
+                      yaml latest_specs.#{MV} Marshal.#{MV} prerelease_specs.#{MV} specs.#{MV})
 
   DEFAULT_URI = 'http://production.cf.rubygems.org/'
   TEMP_LOCAL_PATH = "/tmp/.rubygems-mirror"
@@ -43,13 +43,24 @@ class Gem::Mirror
   end
 
   def update_specs_in_local
-    ALL_SPECS_FILES.each do |sf|
-      @temp_fetcher.fetch(sf)
+    ALL_SPEC_GZ_FILES.each do |sfz|
+      @temp_fetcher.fetch(sfz)
+
+      gzip_path = File.join(TEMP_LOCAL_PATH, sfz)
+      sf_path = gzip_path.gsub(/\.(Z|gz)$/,"")
+      puts "  unzip #{sfz}"
+      open(sf_path, 'wb') do |f| 
+        f << Gem.gunzip(Gem.read_binary(gzip_path))
+      end
+    end
+    
+    OTHER_SPECS_FILES.each do |sfz| 
+      @temp_fetcher.fetch(sfz)
     end
   end
   
   def update_specs
-    ALL_SPECS_FILES.each do |sf|
+    ALL_SPEC_FILES.each do |sf|
       @fetcher.fetch(sf)
     end
   end
