@@ -11,7 +11,7 @@ will maintain stability in master.
 
 ```
                 -------------------------------
-                |       Offical Mirror        |
+                |       Official Mirror        |
                 -------------------------------
                               |
                          [HTTP GET]
