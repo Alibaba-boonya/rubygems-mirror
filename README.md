@@ -16,9 +16,9 @@ will maintain stability in master.
                               |
                          [HTTP GET]
                               |
-            [Fetch specs.4.8.gz] -> [Store in Local]
+              [Fetch *.4.8] -> [Store in Local]
                               |
-            [Parse specs.4.8.gz to discover new gems]
+              [Parse specs.4.8 to discover new gems]
                               |
                 |--[loop fetch new gems] -----------------
                 |             |                          |
