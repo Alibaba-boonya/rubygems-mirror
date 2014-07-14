@@ -51,24 +51,10 @@ In a file at `~/.gem/.mirrorrc` add a config that looks like the following:
         path: /data/rubygems
       parallelism: 10
 
-Either install the gem:
-
-    $ gem install rubygems-mirror
-    $ gem mirror
-
-Or clone the source code and use rake command:
+clone the source code and use rake command:
 
     $ bundle install
     $ rake mirror:update
-
-
-## RESOURCES
-
-* [WebSite](http://rubygems.org/)
-* [Documentation](http://rubygems.rubyforge.org/rubygems-mirror/README_rdoc.html)
-* [Wiki](http://wiki.github.com/rubygems/rubygems-mirror/)
-* [Source Code](http://github.com/rubygems/rubygems-mirror/)
-* [Issues](http://github.com/rubygems/rubygems-mirror/issues)
 
 ## LICENSE:
 
