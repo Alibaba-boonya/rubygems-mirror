@@ -24,6 +24,11 @@ will maintain stability in master.
                 |             |                          |
                 --------------|                          |
                                                          ---- [Store in Aliyun OSS]
+                                                         
+                      [All .gem files fetched]
+                              |
+            [Sync *.4.8 files from local to Aliyun OSS]
+                              |
                             [Done]
 
 ```
