@@ -80,7 +80,9 @@ module Gem
 
         # OSS 的 Bucket Object List 速度太慢, 所以引入 Redis 做一级缓存
         def redis
-          @redis ||= ::Redis::Namespace.new("rubygems-china", redis: ::Redis.new)
+          return @redis if defined? @redis
+          url = ENV.fetch('REDIS_URL', 'redis://127.0.0.1:6379')
+          @redis = ::Redis::Namespace.new("rubygems-china", redis: ::Redis.new(url: url))
         end
 
         def redis_add args
