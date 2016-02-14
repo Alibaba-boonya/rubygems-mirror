@@ -11,8 +11,16 @@ module Gem
         def initialize attributes
           attributes = attributes.dup
           @url = attributes.delete("url") || DEFAULT_URL
-          @http = Net::HTTP::Persistent.new(self.class.name, :ENV)
+          @proxy = _build_proxy(attributes.delete("proxy"))
+          @http = Net::HTTP::Persistent.new(self.class.name, @proxy || :ENV)
         end
+
+        def _build_proxy proxy_str
+          return nil if proxy_str.nil?
+          URI.parse(proxy_str)
+        end
+
+        private :_build_proxy
 
         # Fetch a source path under the base uri, and put it in the same or given
         # destination path under the base path.
