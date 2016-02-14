@@ -12,11 +12,11 @@ module Gem
           attributes = attributes.dup
           @url = attributes.delete("url") || DEFAULT_URL
           @proxy = _build_proxy(attributes.delete("proxy"))
-          @http = Net::HTTP::Persistent.new(self.class.name, @proxy || :ENV)
+          @http = Net::HTTP::Persistent.new(self.class.name, @proxy)
         end
 
         def _build_proxy proxy_str
-          return nil if proxy_str.nil?
+          return :ENV if proxy_str.nil?
           URI.parse(proxy_str)
         end
 
